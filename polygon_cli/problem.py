@@ -78,22 +78,9 @@ class ProblemSession:
             self.pin = data["pin"]
         else:
             self.pin = None
-        if "version" not in data:
-            print('Your session file is too old, relogin required')
-            self.sessionId = None
-            self.ccid = None
-        else:
-            self.owner = data["owner"]
-            self.problem_name = data["problemName"]
-            if data["version"] < 2:
-                for i in range(len(self.local_files)):
-                    if self.local_files[i].type == "statement":
-                        self.local_files[i].polygon_filename += ".tex"
-                        path = self.local_files[i].get_path()
-                        os.rename(path, path + ".tex")
-                        internal_path = self.local_files[i].get_internal_path()
-                        os.rename(internal_path, internal_path + ".tex")
-                        self.local_files[i].filename += ".tex"
+
+        self.owner = data["owner"]
+        self.problem_name = data["problemName"]
 
     def dump_session(self):
         """
@@ -110,7 +97,6 @@ class ProblemSession:
         data["problemName"] = self.problem_name
         data["owner"] = self.owner
         data["polygon_name"] = self.polygon_name
-        data["version"] = 3
         if self.pin is not None:
             data["pin"] = self.pin
         return data

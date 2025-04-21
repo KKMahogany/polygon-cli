@@ -56,6 +56,7 @@ def setup_login_by_url(polygon_name):
     if os.path.exists(authentication_file):
         with open(authentication_file, 'r') as fo:
             auth_data = yaml.load(fo, Loader=yaml.BaseLoader)
+        # If config is using the old format, rewrite with the new format
         if auth_data.get('version') is None:
             with open(authentication_file, 'w') as fo:
                 auth_data = {
@@ -71,6 +72,7 @@ def setup_login_by_url(polygon_name):
                     }
                 }
                 yaml.dump(auth_data, fo, default_flow_style=False)
+
         auth_data_by_name = auth_data.get('polygons').get(polygon_name)
         if auth_data_by_name:
             polygon_url = auth_data_by_name.get('url')
