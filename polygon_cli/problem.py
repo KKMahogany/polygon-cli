@@ -154,14 +154,16 @@ class ProblemSession:
 
     def send_api_request(self, api_method, params, is_json=True, problem_data=True):
         if self.verbose:
-            print('Invoking ' + api_method, end=' ')
-            sys.stdout.flush()
+            print('Invoking ' + api_method)
+
         params["apiKey"] = config.api_key
         params["time"] = int(time.time())
         if self.pin is not None:
             params["pin"] = self.pin
         if problem_data:
             params["problemId"] = self.problem_id
+
+        # See the Polygon API docs for how the signature should be generated.
         signature_random = ''.join([chr(random.SystemRandom().randint(0, 25) + ord('a')) for _ in range(6)])
         signature_random = utils.convert_to_bytes(signature_random)
         for i in params:
@@ -172,12 +174,13 @@ class ProblemSession:
         signature_string += b'?' + b'&'.join([i[0] + b'=' + i[1] for i in param_list])
         signature_string += b'#' + utils.convert_to_bytes(config.api_secret)
         params["apiSig"] = signature_random + utils.convert_to_bytes(hashlib.sha512(signature_string).hexdigest())
+
         url = config.polygon_url + '/api/' + api_method
         result = self.session.request('POST', url, files=params)
+
         if self.verbose or result.status_code != 200:
-            if not self.verbose:
-                print('Invoking ' + api_method, end=' ')
-            print(result.status_code)
+            print(f'Invoking of {api_method} gave status code {result.status_code}')
+
         if not is_json and result.status_code == 200:
             return result.content
         result = json.loads(result.content.decode('utf8'))
@@ -311,6 +314,8 @@ class ProblemSession:
         parse_api_file_list(files, files_raw, 'statementResource')
         return files
 
+
+    # Gets list of files from polygon.
     def get_all_files_list(self):
         """
 

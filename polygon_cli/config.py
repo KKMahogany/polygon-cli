@@ -1,3 +1,4 @@
+# This file is a bit like a util2.py
 import os
 import sys
 import getpass
@@ -5,7 +6,9 @@ import yaml
 
 MAIN_POLYGON_URL = 'https://polygon.codeforces.com'
 
+# Where session state is saved
 internal_directory_path = '.polygon-cli'
+
 default_source_types = {
     '.cpp': 'cpp.g++17',
     '.c++': 'cpp.g++17',
@@ -29,22 +32,24 @@ sessionFile = 'session.json'
 def get_session_file_path():
     return os.path.join(internal_directory_path, sessionFile)
 
-
+# Unused
 def get_solution_path(solution):
+    # Bugged as subdirectory_paths has no 'solutions' key
     return os.path.join(subdirectory_paths['solutions'], solution)
 
-
+# Unused
 def get_download_solution_path(solution):
+    # Bugged as subdirectory_paths has no 'solutions' key
     return os.path.join(internal_directory_path, subdirectory_paths['solutions'], solution)
 
-
+# Should probably move this to utils, as that's the only place its used
 def get_merge_tool(old, our, theirs):
     if sys.platform == 'darwin':
         return ' '.join(["diff3", "--merge", our, old, theirs])
     else:
         return ' '.join(["diff3", "--strip-trailing-cr", "--merge", our, old, theirs])
 
-
+# Same as above
 def get_diff_tool(old, our, theirs):
     return ' '.join(["diff", theirs, our])
 

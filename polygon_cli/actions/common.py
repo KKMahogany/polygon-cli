@@ -15,6 +15,8 @@ def fatal(error):
 
 def load_session(verbose=True):
     try:
+        # TODO: I don't like that this utility has to have the working directory
+        # be the root of the problem directory.
         if os.path.exists(config.get_session_file_path()):
             session_data_json = open(config.get_session_file_path(), 'r').read()
         elif os.path.exists(os.path.join('..', config.get_session_file_path())):

@@ -23,7 +23,7 @@ def diff_files(old, our, theirs):
                    stdout=sys.stdout,
                    shell=True)
 
-
+# Used in a bunch of places
 def safe_rewrite_file(path, content, openmode='wb'):
     dir_name = os.path.dirname(path)
     if dir_name and not os.path.exists(dir_name):
@@ -31,6 +31,7 @@ def safe_rewrite_file(path, content, openmode='wb'):
     if openmode.endswith('b'):
         content = convert_to_bytes(content)
     if os.path.exists(path):
+        # I'm really unclear on what this is for.
         shutil.copy(path, path + ".$$$")
         open(path, openmode).write(content)
         os.remove(path + '.$$$')
@@ -38,6 +39,7 @@ def safe_rewrite_file(path, content, openmode='wb'):
         open(path, openmode).write(content)
 
 
+# Only used in the update command
 def merge_files(old, our, theirs):
     if open(old, 'rb').read().splitlines() == open(theirs, 'rb').read().splitlines():
         return 'Not changed'
@@ -56,7 +58,7 @@ def merge_files(old, our, theirs):
         shutil.copy(theirs, our + '.new')
     return return_value
 
-
+# Only used in the update command
 def safe_update_file(old_path, new_path, content):
     open(old_path + '.new', 'wb').write(content)
     return_value = merge_files(old_path, new_path, old_path + '.new')
