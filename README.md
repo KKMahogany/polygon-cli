@@ -1,13 +1,10 @@
 # polygon-cli
-Command-line tool for [polygon](https://polygon.codeforces.com/)
+Fork of command-line tool for [polygon](https://polygon.codeforces.com/)
+
+This fork aims to improve the overall code quality and 
 
 ## Requirements
 
-* Python 3 (tested on 3.4)
-* requests lib
-* prettytable lib
-* colorama lib
-* pyyaml lib
 * diff and diff3 available in path
 
 ## Supported features
@@ -18,40 +15,48 @@ Command-line tool for [polygon](https://polygon.codeforces.com/)
 
 ## Installation
 
-### Using pip3
+Python package installation can become a huge headache if you do so recklessly.
+If this is your first time doing this, I would highly recommend reading [this](https://packaging.python.org/en/latest/tutorials/installing-packages/#creating-virtual-environments) section of the Python Packaging User Guide.
 
-Run `pip3 install polygon-cli`
+Creating a virtual environment to install this CLI is optional, but highly recommended.
 
-### Using the source code
+### Prework
 
-1. Install Python3 and setuputils module (for example, it goes with pip3)
-2. Checkout repo using `git clone https://github.com/kunyavskiy/polygon-cli.git`
+You will need to install [pip](https://pip.pypa.io/en/stable/installation/) (this is already installed if you're using a virtual environment).
 
-3. Run `python3 setup.py install [--user]`
+You will also need to install [setuptools](https://pypi.org/project/setuptools/) (this *may* already be installed by default, depending on your Python version and choice of virtual environment).
 
+### From PyPI
+
+(You cannot install this fork from PyPI)
+
+### From the source code
+
+1. Checkout the repo (e.g. with `git clone https://github.com/kunyavskiy/polygon-cli.git`)
+1. Run `python -m pip install path/to/downloaded/repo`
       * On Linux, it will put the executable polygon-cli in /usr/local/bin
       * On Windows, it will put the executable polygon-cli in Scripts directory of your Python3 installation. It should be added to the path variable for easier usage.
 
-   Add the option `--user` to install as local user without root/administrator privileges.
-
-4. Even if it doesn't run, install the dependencies manually as below,
-  * `pip3 install requests`
-  * `pip3 install colorama`
-  * `pip3 install prettytable`
-  * `pip3 install pyyaml`
-
 ## Running and authentication
 
-Run using `polygon-cli` command.
+Run `polygon-cli -h` for useful help text.
 
 Usually the usage starts with (use problem short name or problem id instead of `aplusb`):
-   * `polygon-cli init aplusb`
-   * `polygon-cli update`
 
-The commands above create a working copy in the current folder. Use `polygon-cli -h` to see other commands of the client.
+```bash
+# Initialise the working directory
+polygon-cli init aplusb # or use the numeric problem ID if you prefer
 
-On the first usage login, password, api_key and api_secret will be asked.
+# Pull a copy of all files from polygon
+polygon-cli update 
+```
 
-They will be stored locally in plain text.
+On the first usage, you will be prompted to provide:
 
-You may leave password field empty. If you do that, some features based on html parsing, because of lack of api will not work then.
+- `login`: your polygon username.
+- `password`: your polygon password. Recommend you leave this blank, as it will be saved in plaintext.
+  You will be prompted interactively if it is needed.
+- `api_key` and `api_secret`: You can get this from your settings in polygon.
+
+Most methods don't use the `login` / `password`, so you can just provide a dummy login and blank password.
+Just the API key/secret are needed.
