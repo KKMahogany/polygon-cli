@@ -4,7 +4,7 @@ from .common import *
 from .. import colors
 from ..local_file import LocalFile
 
-
+# Adds a *new* file to polygon, and also automatically commits it too.
 def process_add(file_type, solution_type, files):
     real_file_type = file_type
     if file_type in ['checker', 'validator', 'interactor']:

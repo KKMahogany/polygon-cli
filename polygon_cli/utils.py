@@ -87,11 +87,13 @@ def get_local_solutions():
     return os.listdir(config.solutions_path)
 
 
+# When script is changed, need to check if groupings are specified.
+# If so, we need to update test groups.
 def need_update_groups(content):
     match = re.search(rb"<#-- *group *([-0-9]*) *(score *(\d*))? *(depends *([-0-9]* +)*)? *-->", content)
     return match is not None
 
-
+# Only used in problem.update_groups
 def parse_script_groups(content, hand_tests):
     groups = {"0": []}
     scores = {"0": None}

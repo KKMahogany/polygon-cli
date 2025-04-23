@@ -3,7 +3,7 @@ from prettytable import PrettyTable
 from .common import *
 from .. import colors
 
-
+# Send local changes to polygon. Make sure to "add" new files first before committing.
 def process_commit(to_commit):
     files = global_vars.problem.local_files
     polygon_files = global_vars.problem.get_all_files_list()

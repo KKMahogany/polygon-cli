@@ -5,6 +5,10 @@ from .. import colors
 from ..local_file import LocalFile
 
 
+# This action acts almost like a "git pull"
+#
+# Data about what files exist locally are stored in ProblemSession.local_files, which
+# is persisted in the session data object.
 def process_update(flat, to_update):
     polygon_files = global_vars.problem.get_all_files_list()
     table = PrettyTable(['File type', 'Polygon name', 'Local path', 'Status'])

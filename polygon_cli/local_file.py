@@ -6,6 +6,9 @@ from . import utils
 
 
 # This class represents a "file" object in the local workspace
+#
+# When polygon_filename is None, this means that the given object is local
+# only.
 class LocalFile:
     def __init__(self, filename=None, dir=None, name=None, type=None, polygon_filename=None, tag=None):
         """
@@ -65,6 +68,8 @@ class LocalFile:
         # e.g. a generator called main.cpp and a solution called main.cpp
         return os.path.join(config.internal_directory_path, self.filename)
 
+    # Upload a file for the first time to polygon. If it already exists, you
+    # should use "update" instead.
     def upload(self):
         assert self.polygon_filename is None
         file = open(self.get_path(), 'rb')

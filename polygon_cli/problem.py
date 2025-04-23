@@ -17,7 +17,8 @@ from . import utils
 from .exceptions import PolygonNotLoginnedError, ProblemNotFoundError, PolygonApiError
 from .polygon_html_parsers import *
 
-
+# Get saved login/password details, or ask interactively if not saved.
+# Only used in this file.
 def get_login_password():
     if config.login:
         print('Using login %s from config' % config.login)
@@ -30,7 +31,10 @@ def get_login_password():
     else:
         config.password = getpass('Enter password: ')
 
-
+# Most of the "get file" operations in the Polygon API return
+# the same sort of json object. This method converts it to a polygon file.
+#
+# (only used in this file)
 def parse_api_file_list(files, files_raw, type):
     for j in files_raw:
         file = polygon_file.PolygonFile()
@@ -41,6 +45,14 @@ def parse_api_file_list(files, files_raw, type):
         files.append(file)
 
 
+# problem_id can be None, in which case only contest-related methods work.
+#
+# Overall, this is more of a "session" object than a "problem session"
+# The "session" tracks the state of local files and the polygon-cli provides
+# git-like commands to work with it:
+#  - add: Add a file to the session AND push to polygon
+#  - update: Pull and merge files from polygon
+#  - commit: Push all local changes to polygon
 class ProblemSession:
     def __init__(self, polygon_name, problem_id, pin, verbose=True):
         """
@@ -101,6 +113,7 @@ class ProblemSession:
             data["pin"] = self.pin
         return data
 
+    # Helper method that makes links for non-API requests.
     def make_link(self, link, ccid=False, ssid=False):
         """
 
@@ -131,6 +144,7 @@ class ProblemSession:
             result = config.polygon_url + '/' + link
         return result
 
+    # Sends a non-API request, but first logs in if necessary.
     def send_request(self, method, url, **kw):
         """
 
@@ -191,12 +205,15 @@ class ProblemSession:
             return result["result"]
         return None
 
+    # Only used in actions/update_groups.py
     def get_script_content(self):
         for i in self.local_files:
             if i.type == 'script':
                 return open(i.get_path(), 'rb').read()
         return None
 
+    # In order to make non-API requests, we need to login first, which requires
+    # the username and password.
     def login(self, login, password):
         """
 
@@ -451,6 +468,8 @@ class ProblemSession:
     def load_script(self):
         return self.send_api_request('problem.script', {'testset': 'tests'}, is_json=False)
 
+    # See utils.parse_script_groups to understand how test group data is read out of
+    # the generator script.
     def update_groups(self, script_content):
         self.ensure_groups_enabled('tests')
         tests = self.get_tests()
@@ -673,6 +692,7 @@ class ProblemSession:
             print(e)
         return False
 
+    # As you'd expect, used by import_package
     def import_problem_from_package(self, directory, skip_standart_resources=True):
         path_to_problemxml = os.path.join(directory, 'problem.xml')
 
@@ -927,6 +947,7 @@ class ProblemSession:
                 except PolygonApiError as e:
                     print(e)
 
+    # If using test groups (aka subtasks), the flag needs to be set.
     def ensure_groups_enabled(self, testset_name):
         if testset_name not in self.groups_enabled:
             if self.send_api_request('problem.enableGroups',
@@ -935,6 +956,7 @@ class ProblemSession:
             else:
                 self.groups_enabled.add(testset_name)
 
+    # If using per-test group scores, the flag needs to be set.
     def ensure_scores_enabled(self):
         if not self.scores_enabled:
             if self.send_api_request('problem.enablePoints',
@@ -943,6 +965,7 @@ class ProblemSession:
             else:
                 self.scores_enabled = True
 
+    # Indicates test group nesting
     def set_test_group_deps(self, group, depends):
         self.send_api_request('problem.saveTestGroup', {
             'testset': 'tests',

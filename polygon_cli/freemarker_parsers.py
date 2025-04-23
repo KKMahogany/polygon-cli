@@ -1,3 +1,4 @@
+# As I understand it, freemarker parsing is only needed to support update_groups
 import ast
 import re
 

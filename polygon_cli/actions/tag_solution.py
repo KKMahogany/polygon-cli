@@ -2,7 +2,7 @@ from prettytable import PrettyTable
 
 from .common import *
 
-
+# TODO: This should be using problem.editSolutionExtraTags from the API instead
 def process_tag_solution(solution, tags):
     for i in range(len(tags)):
         data={
