@@ -14,6 +14,7 @@ import requests
 from . import config
 from . import polygon_file
 from . import utils
+from . import colors
 from .exceptions import PolygonNotLoginnedError, ProblemNotFoundError, PolygonApiError
 from .polygon_html_parsers import *
 from . import freemarker_parsers
@@ -36,7 +37,7 @@ def get_login_password():
 # the same sort of json object. This method converts it to a polygon file.
 #
 # (only used in this file)
-def parse_api_file_list(files, files_raw, type):
+def _parse_api_file_list(files, files_raw, type):
     for j in files_raw:
         file = polygon_file.PolygonFile()
         file.type = type
@@ -45,6 +46,13 @@ def parse_api_file_list(files, files_raw, type):
         file.size = j["length"]
         files.append(file)
 
+_default_source_types = {
+    '.cpp': 'cpp.g++17',
+    '.c++': 'cpp.g++17',
+    '.py': 'python.3',
+    '.java': 'java8',
+    '.pas': 'pas.fpc',
+}
 
 # problem_id can be None, in which case only contest-related methods work.
 #
@@ -75,6 +83,7 @@ class ProblemSession:
         self.scores_enabled = False
         self.groups_enabled = set()
 
+    # This must be called before any API fetches can happen
     def use_ready_session(self, data):
         """
 
@@ -284,7 +293,7 @@ class ProblemSession:
         """
         solutions_raw = self.send_api_request('problem.solutions', {})
         files = []
-        parse_api_file_list(files, solutions_raw, 'solution')
+        _parse_api_file_list(files, solutions_raw, 'solution')
         return files
 
     def get_files_list(self):
@@ -292,16 +301,18 @@ class ProblemSession:
 
         :rtype: list of polygon_file.PolygonFile
         """
-        files_raw = self.send_api_request('problem.files', {})
         files = []
+
+        files_raw = self.send_api_request('problem.files', {})
         types_map = {'sourceFiles': 'source', 'resourceFiles': 'resource', 'auxFiles': 'attachment'}
         for i in types_map:
-            parse_api_file_list(files, files_raw[i], types_map[i])
+            _parse_api_file_list(files, files_raw[i], types_map[i])
 
         script = polygon_file.PolygonFile()
         script.type = 'script'
         script.name = 'script'
         files.append(script)
+
         return files
 
     def get_statements_list(self):
@@ -329,7 +340,7 @@ class ProblemSession:
         """
         files_raw = self.send_api_request('problem.statementResources', {})
         files = []
-        parse_api_file_list(files, files_raw, 'statementResource')
+        _parse_api_file_list(files, files_raw, 'statementResource')
         return files
 
 
@@ -339,11 +350,14 @@ class ProblemSession:
 
         :rtype: list of polygon_file.PolygonFile
         """
-        return self.get_files_list() + self.get_solutions_list() + self.get_statements_list() + self.get_statement_resources_list()
+        return self.get_files_list() +\
+               self.get_solutions_list() +\
+               self.get_statements_list() +\
+               self.get_statement_resources_list()
 
     def upload_file(self, name, type, content, is_new, tag=None, source_type=None):
         """
-        Uploads new solution to polygon
+        Uploads new compileable file to polygon
 
         :type name: str
         :type type: str
@@ -355,9 +369,9 @@ class ProblemSession:
         options = {}
         if type != 'resource':
             if source_type is None:
-                for extension in config.default_source_types.keys():
+                for extension in _default_source_types.keys():
                     if name.endswith(extension):
-                        options['sourceType'] = config.default_source_types[extension]
+                        options['sourceType'] = _default_source_types[extension]
             else:
                 options['sourceType'] = source_type
         if is_new:
@@ -464,7 +478,7 @@ class ProblemSession:
     def download_all_tests(self):
         tests = self.send_api_request('problem.tests', {'testset': 'tests'})
         for t in tests:
-            self.download_test(t["index"], config.subdirectory_paths['test'])
+            self.download_test(t["index"], 'tests')
 
     def load_script(self):
         return self.send_api_request('problem.script', {'testset': 'tests'}, is_json=False)
@@ -473,8 +487,8 @@ class ProblemSession:
     # the generator script.
     def update_groups(self, script_content):
         self.ensure_groups_enabled('tests')
-        tests = self.get_tests()
-        hand_tests = self.get_hand_tests_list(tests)
+        tests = self._get_tests()
+        hand_tests = self._get_hand_tests_list(tests)
         groups, scores = freemarker_parsers.parse_script_groups(script_content, hand_tests)
         test_group = {i["index"]: i["group"] if "group" in i else None for i in tests}
         test_score = {i["index"]: i["points"] if "points" in i else 0.0 for i in tests}
@@ -483,7 +497,7 @@ class ProblemSession:
                 bad_current_groups = list(filter(lambda x: test_group[x] != i, groups[i]))
                 if bad_current_groups:
                     print('Set group ' + str(i) + ' for tests ' + str(bad_current_groups))
-                self.set_test_group(bad_current_groups, i)
+                self._set_test_group(bad_current_groups, i)
                 if scores[i] is not None:
                     self.ensure_scores_enabled()
                     need_score_test = groups[i][0]
@@ -493,10 +507,10 @@ class ProblemSession:
                         if score != need_score:
                             if bad_current_groups:
                                 print('Set score ' + str(need_score) + ' for test ' + str(t))
-                            self.set_test_score(t, i, need_score)
+                            self._set_test_score(t, i, need_score)
             for i in groups.keys():
                 if scores[i] is not None and scores[i]["depends"] is not None:
-                    self.set_test_group_deps(i, scores[i]["depends"])
+                    self._set_test_group_deps(i, scores[i]["depends"])
 
         return True
 
@@ -543,21 +557,21 @@ class ProblemSession:
             return False
         return True
 
-    def set_test_group(self, tests, group, test_points=[]):
+    def _set_test_group(self, tests, group, test_points=[]):
         for i in tests:
             #self.send_api_request('problem.saveTest', {'testset': 'tests', 'testIndex': i, 'testGroup': group, 'testPoints': test_points[i]})
-            self.set_test_score(i, group, test_points[i] if i in test_points else None)
+            self._set_test_score(i, group, test_points[i] if i in test_points else None)
 
-    def set_test_score(self, test, group, score):
+    def _set_test_score(self, test, group, score):
         data = {'testset': 'tests', 'testIndex': test, 'testGroup': group, 'testPoints': score}
         if score is None:
             del data['testPoints']
         self.send_api_request('problem.saveTest', data)
 
-    def get_tests(self):
+    def _get_tests(self):
         return self.send_api_request('problem.tests', {'testset': 'tests'})
 
-    def get_hand_tests_list(self, tests):
+    def _get_hand_tests_list(self, tests):
         result = []
         for i in tests:
             if i["manual"]:
@@ -906,7 +920,7 @@ class ProblemSession:
             updatedTests = []
             for group, tests in groups.items():
                 print('Setting group %s for tests %s' % (group, str(tests)))
-                self.set_test_group(tests, group, test_points)
+                self._set_test_group(tests, group, test_points)
                 updatedTests.extend(tests)
             updatedTests = set(updatedTests)
             for tid, points in test_points.items():
@@ -967,7 +981,7 @@ class ProblemSession:
                 self.scores_enabled = True
 
     # Indicates test group nesting
-    def set_test_group_deps(self, group, depends):
+    def _set_test_group_deps(self, group, depends):
         self.send_api_request('problem.saveTestGroup', {
             'testset': 'tests',
             'group': group,

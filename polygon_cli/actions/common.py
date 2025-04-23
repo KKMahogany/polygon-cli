@@ -29,17 +29,17 @@ def save_session():
             sort_keys=True,
             indent='  ',
             default=json_encoders.my_json_encoder)
-    utils.safe_rewrite_file(config.get_session_file_path(), session_data_json)
+    utils.safe_rewrite_file(_session_file_path(), session_data_json)
 
 
 def _load_session(verbose=True):
     # TODO: I don't like that this utility has to have the working directory
     # be the root of the problem directory.
-    if os.path.exists(config.get_session_file_path()):
-        session_data_json = open(config.get_session_file_path(), 'r').read()
-    elif os.path.exists(os.path.join('..', config.get_session_file_path())):
+    if os.path.exists(_session_file_path()):
+        session_data_json = open(_session_file_path(), 'r').read()
+    elif os.path.exists(os.path.join('..', _session_file_path())):
         os.chdir('..')
-        session_data_json = open(config.get_session_file_path(), 'r').read()
+        session_data_json = open(_session_file_path(), 'r').read()
     else:
         fatal('No session found. Use init first and make sure you are in the right directory')
 
@@ -55,3 +55,8 @@ def _load_session(verbose=True):
             verbose=verbose)
 
     global_vars.problem.use_ready_session(session_data)
+
+def _session_file_path():
+    return os.path.join(config.internal_directory_path, 'session.json')
+
+

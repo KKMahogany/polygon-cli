@@ -12,6 +12,7 @@ from . import utils
 class PolygonFile:
     def __init__(self):
         self.name = None
+        # See subdirectory_paths for a list of valid types
         self.type = None
         self.date = None
         self.size = None

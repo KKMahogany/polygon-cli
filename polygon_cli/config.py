@@ -6,41 +6,25 @@ import yaml
 
 MAIN_POLYGON_URL = 'https://polygon.codeforces.com'
 
-# Where session state is saved
+# Where session state and file snapshots are saved.
 internal_directory_path = '.polygon-cli'
 
-default_source_types = {
-    '.cpp': 'cpp.g++17',
-    '.c++': 'cpp.g++17',
-    '.py': 'python.3',
-    '.java': 'java8',
-    '.pas': 'pas.fpc',
-}
+# Map "file type" to local location (empty string is at root)
+#
+# The "file type" is a polygon-cli concept. See problem.get_*_list methods
+# for what the different keys are.
 subdirectory_paths = {
     'attachment': 'src',
     'resource': 'src',
     'solution': 'solutions',
     'source': 'src',
     'script': '',
-    'test': 'tests',
+    # polygon-cli lets you download tests, but doesn't treat them like regular
+    # files that can be modified and committed. It's "read-only".
+    #'test': 'tests',
     'statement': 'statements',
     'statementResource': 'statements',
 }
-sessionFile = 'session.json'
-
-
-def get_session_file_path():
-    return os.path.join(internal_directory_path, sessionFile)
-
-# Unused
-def get_solution_path(solution):
-    # Bugged as subdirectory_paths has no 'solutions' key
-    return os.path.join(subdirectory_paths['solutions'], solution)
-
-# Unused
-def get_download_solution_path(solution):
-    # Bugged as subdirectory_paths has no 'solutions' key
-    return os.path.join(internal_directory_path, subdirectory_paths['solutions'], solution)
 
 def setup_login_by_url(polygon_name):
     global polygon_url, login, password, api_key, api_secret

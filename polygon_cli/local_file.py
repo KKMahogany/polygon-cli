@@ -57,6 +57,9 @@ class LocalFile:
     # of its contents are saved in this location to prevent us from accidentally
     # clobbering changes made directly in the web client.
     #
+    # If we detect that the file has changed on Polygon, but we also have local
+    # changes, we'll need to merge them somehow
+    #
     # NOTE THAT THIS DOES NOT NECESSARILY DEFEND AGAINST OVERWRITING METADATA
     # I STILL NEED TO VERIFY THE BEHAVIOUR THERE
     def get_internal_path(self):
