@@ -3,7 +3,6 @@ import json
 import random
 import sys
 import time
-from getpass import getpass
 
 from xml.etree import ElementTree
 import os
@@ -18,20 +17,6 @@ from . import colors
 from .exceptions import PolygonNotLoginnedError, ProblemNotFoundError, PolygonApiError
 from .polygon_html_parsers import *
 from . import freemarker_parsers
-
-# Get saved login/password details, or ask interactively if not saved.
-# Only used in this file.
-def get_login_password():
-    if config.login:
-        print('Using login %s from config' % config.login)
-    else:
-        print('Enter login:', end=' ')
-        sys.stdout.flush()
-        config.login = sys.stdin.readline().strip()
-    if config.password:
-        print('Using password from config')
-    else:
-        config.password = getpass('Enter password: ')
 
 # Most of the "get file" operations in the Polygon API return
 # the same sort of json object. This method converts it to a polygon file.
@@ -137,6 +122,8 @@ class ProblemSession:
         return data
 
     # Helper method that makes links for non-API requests.
+    # Really should only be used internally, but is used by tag_solution.
+    # The functionality in that action should be moved in here.
     def make_link(self, link, ccid=False, ssid=False):
         """
 
@@ -145,13 +132,15 @@ class ProblemSession:
         :type ssid: bool
         :rtype: str
         """
+        # Append the ccid and ssid HTML parameters, though we may need to re-log in
+        # if we don't have them for some reason.
         if ccid:
             if link.find('?') != -1:
                 link += '&'
             else:
                 link += '?'
             if self.ccid is None:
-                self.renew_http_data()
+                self._renew_http_data()
             link += 'ccid=%s' % self.ccid
         if ssid:
             if link.find('?') != -1:
@@ -159,7 +148,7 @@ class ProblemSession:
             else:
                 link += '?'
             if self.sessionId is None:
-                self.renew_http_data()
+                self._renew_http_data()
             link += 'session=%s' % self.sessionId
         if link.startswith('/'):
             result = config.polygon_url + link
@@ -168,6 +157,7 @@ class ProblemSession:
         return result
 
     # Sends a non-API request, but first logs in if necessary.
+    # Use make_link to create the URL for this method
     def send_request(self, method, url, **kw):
         """
 
@@ -182,7 +172,7 @@ class ProblemSession:
         print(result.status_code)
         if result.url and result.url.startswith(config.polygon_url + '/login'):
             if not self.relogin_done:
-                self.renew_http_data()
+                self._renew_http_data()
                 return self.send_request(method, url, **kw)
             else:
                 print('Already tried to relogin, but it didn''t helped')
@@ -286,9 +276,9 @@ class ProblemSession:
                 'problem_name': None
                 }
 
-    def renew_http_data(self):
+    def _renew_http_data(self):
         self.relogin_done = True
-        get_login_password()
+        config.ask_for_login_password()
         self.login(config.login, config.password)
         links = self.get_problem_links()
         if links['start'] is None and links['continue'] is None:

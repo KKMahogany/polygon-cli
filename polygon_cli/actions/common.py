@@ -11,10 +11,10 @@ from ..problem import ProblemSession
 
 def fatal(error):
     print(error)
-    exit(0)
+    exit(1)
 
-# Initialise session data (global_vars.problem), or die
-# if it can't be found.
+# Initialise credentials and session data (global_vars.problem, config.*),
+# or die if it can't be found.
 #
 # Only has one option at the moment, verbosity
 def load_session_with_options(options):

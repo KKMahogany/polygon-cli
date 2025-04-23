@@ -1,3 +1,7 @@
+# HTML parsers for non-API requests.
+#
+# This is a pretty hacky approach. Where possible we should replace these
+# with methods from the Polygon API
 from html.parser import HTMLParser
 
 
@@ -8,8 +12,12 @@ class ExtractCCIDParser(HTMLParser):
 
     def handle_starttag(self, tag, attrs):
         if tag == "meta":
-            if len(attrs) == 2 and attrs[0][0] == 'name' and attrs[0][1] == 'ccid' and attrs[1][0] == 'content':
+            if len(attrs) == 2 and\
+               attrs[0][0] == 'name' and\
+               attrs[0][1] == 'ccid' and\
+               attrs[1][0] == 'content':
                 self.ccid = attrs[1][1]
+        assert(self.ccid)
 
 
 class ProblemsPageParser(HTMLParser):
