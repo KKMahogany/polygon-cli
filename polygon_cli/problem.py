@@ -46,6 +46,19 @@ def _parse_api_file_list(files, files_raw, type):
         file.size = j["length"]
         files.append(file)
 
+
+# Simple utility to get rid of the windows line endings that
+# polygon uses for tests
+def _convert_to_local_newlines(x):
+    in_bytes = False
+    if isinstance(x, bytes):
+        x = str(x, 'utf8')
+        in_bytes = True
+    x = x.replace('\r\n', os.linesep)
+    if in_bytes:
+        return bytes(x, 'utf8')
+    return x
+
 _default_source_types = {
     '.cpp': 'cpp.g++17',
     '.c++': 'cpp.g++17',
@@ -460,7 +473,7 @@ class ProblemSession:
                 return local
         return None
 
-    def download_test(self, test_num, test_directory='.', input_pattern='%03d', output_pattern='%03d.a'):
+    def download_test(self, test_num, test_directory='tests', input_pattern='%03d', output_pattern='%03d.a'):
         """
 
         :type test_num: str
@@ -469,16 +482,22 @@ class ProblemSession:
         input = self.send_api_request('problem.testInput',
                                       {'testset': 'tests', 'testIndex': test_num},
                                       is_json=False)
-        utils.safe_rewrite_file(test_directory + ('/' + input_pattern) % int(test_num), utils.convert_newlines(input))
+        utils.safe_rewrite_file(
+            test_directory + ('/' + input_pattern) % int(test_num),
+            _convert_to_local_newlines(input))
+
         answer = self.send_api_request('problem.testAnswer',
                                        {'testset': 'tests', 'testIndex': test_num},
                                        is_json=False)
-        utils.safe_rewrite_file(test_directory + ('/' + output_pattern) % int(test_num), utils.convert_newlines(answer))
+        utils.safe_rewrite_file(
+            test_directory + ('/' + output_pattern) % int(test_num),
+            _convert_to_local_newlines(answer))
 
     def download_all_tests(self):
+        print(colors.warning('Getting all tests... this might take a while.'))
         tests = self.send_api_request('problem.tests', {'testset': 'tests'})
         for t in tests:
-            self.download_test(t["index"], 'tests')
+            self.download_test(t["index"])
 
     def load_script(self):
         return self.send_api_request('problem.script', {'testset': 'tests'}, is_json=False)

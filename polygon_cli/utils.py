@@ -99,17 +99,6 @@ def convert_to_bytes(x):
     return bytes(str(x), 'utf8')
 
 
-def convert_newlines(x):
-    in_bytes = False
-    if isinstance(x, bytes):
-        x = str(x, 'utf8')
-        in_bytes = True
-    x = x.replace('\r\n', os.linesep)
-    if in_bytes:
-        return bytes(x, 'utf8')
-    return x
-
-
 def get_api_file_type(type):
     if type == 'source' or type == 'resource':
         return type
