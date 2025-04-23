@@ -6,6 +6,10 @@ from .. import config
 from .. import global_vars
 
 
+def get_session_options(options):
+    return {'verbose': options.verbose}
+
+
 def process_init(polygon_name, problem_id, pin, **session_options):
     config.setup_login_by_url(polygon_name)
     if not problem_id.isdigit():

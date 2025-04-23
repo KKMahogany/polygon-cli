@@ -16,6 +16,7 @@ from . import polygon_file
 from . import utils
 from .exceptions import PolygonNotLoginnedError, ProblemNotFoundError, PolygonApiError
 from .polygon_html_parsers import *
+from . import freemarker_parsers
 
 # Get saved login/password details, or ask interactively if not saved.
 # Only used in this file.
@@ -468,13 +469,13 @@ class ProblemSession:
     def load_script(self):
         return self.send_api_request('problem.script', {'testset': 'tests'}, is_json=False)
 
-    # See utils.parse_script_groups to understand how test group data is read out of
+    # See parse_script_groups to understand how test group data is read out of
     # the generator script.
     def update_groups(self, script_content):
         self.ensure_groups_enabled('tests')
         tests = self.get_tests()
         hand_tests = self.get_hand_tests_list(tests)
-        groups, scores = utils.parse_script_groups(script_content, hand_tests)
+        groups, scores = freemarker_parsers.parse_script_groups(script_content, hand_tests)
         test_group = {i["index"]: i["group"] if "group" in i else None for i in tests}
         test_score = {i["index"]: i["points"] if "points" in i else 0.0 for i in tests}
         if groups:

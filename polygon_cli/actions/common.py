@@ -1,3 +1,4 @@
+# For methods common to all actions
 import json
 import os
 
@@ -12,36 +13,45 @@ def fatal(error):
     print(error)
     exit(0)
 
-
-def load_session(verbose=True):
-    try:
-        # TODO: I don't like that this utility has to have the working directory
-        # be the root of the problem directory.
-        if os.path.exists(config.get_session_file_path()):
-            session_data_json = open(config.get_session_file_path(), 'r').read()
-        elif os.path.exists(os.path.join('..', config.get_session_file_path())):
-            os.chdir('..')
-            session_data_json = open(config.get_session_file_path(), 'r').read()
-        else:
-            return False
-        session_data = json.loads(session_data_json, object_hook=json_encoders.my_json_decoder)
-        config.setup_login_by_url(session_data['polygon_name'])
-        global_vars.problem = ProblemSession(session_data['polygon_name'], session_data["problemId"], None, verbose=verbose)
-        global_vars.problem.use_ready_session(session_data)
-        return True
-    except:
-        return False
-
-
-def get_session_options(options):
-    return {'verbose': options.verbose}
-
-
+# Initialise session data (global_vars.problem), or die
+# if it can't be found.
+#
+# Only has one option at the moment, verbosity
 def load_session_with_options(options):
-    return load_session(options.verbose)
+    _load_session(options.verbose)
+    return True # Used to return false on fail, now just dies
 
 
 def save_session():
     session_data = global_vars.problem.dump_session()
-    session_data_json = json.dumps(session_data, sort_keys=True, indent='  ', default=json_encoders.my_json_encoder)
+    session_data_json = json.dumps(
+            session_data,
+            sort_keys=True,
+            indent='  ',
+            default=json_encoders.my_json_encoder)
     utils.safe_rewrite_file(config.get_session_file_path(), session_data_json)
+
+
+def _load_session(verbose=True):
+    # TODO: I don't like that this utility has to have the working directory
+    # be the root of the problem directory.
+    if os.path.exists(config.get_session_file_path()):
+        session_data_json = open(config.get_session_file_path(), 'r').read()
+    elif os.path.exists(os.path.join('..', config.get_session_file_path())):
+        os.chdir('..')
+        session_data_json = open(config.get_session_file_path(), 'r').read()
+    else:
+        fatal('No session found. Use init first and make sure you are in the right directory')
+
+    session_data = json.loads(
+            session_data_json,
+            object_hook=json_encoders.my_json_decoder)
+
+    config.setup_login_by_url(session_data['polygon_name'])
+    global_vars.problem = ProblemSession(
+            session_data['polygon_name'],
+            session_data["problemId"],
+            pin=None,
+            verbose=verbose)
+
+    global_vars.problem.use_ready_session(session_data)

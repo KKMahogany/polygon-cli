@@ -66,6 +66,8 @@ class LocalFile:
         """
         # TODO: This will break if there are multiple files of the same name
         # e.g. a generator called main.cpp and a solution called main.cpp
+        #
+        # In general, polygon does not do well with files of the same name.
         return os.path.join(config.internal_directory_path, self.filename)
 
     # Upload a file for the first time to polygon. If it already exists, you

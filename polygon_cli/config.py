@@ -42,18 +42,6 @@ def get_download_solution_path(solution):
     # Bugged as subdirectory_paths has no 'solutions' key
     return os.path.join(internal_directory_path, subdirectory_paths['solutions'], solution)
 
-# Should probably move this to utils, as that's the only place its used
-def get_merge_tool(old, our, theirs):
-    if sys.platform == 'darwin':
-        return ' '.join(["diff3", "--merge", our, old, theirs])
-    else:
-        return ' '.join(["diff3", "--strip-trailing-cr", "--merge", our, old, theirs])
-
-# Same as above
-def get_diff_tool(old, our, theirs):
-    return ' '.join(["diff", theirs, our])
-
-
 def setup_login_by_url(polygon_name):
     global polygon_url, login, password, api_key, api_secret
     authentication_file = os.path.join(os.path.expanduser('~'), '.config', 'polygon-cli', 'auth.yaml')

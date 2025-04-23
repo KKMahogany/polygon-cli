@@ -3,6 +3,10 @@ from prettytable import PrettyTable
 from .common import *
 
 
+def get_session_options(options):
+    return {'verbose': options.verbose}
+
+
 def process_samples(polygon_name, contest_id, pin, **session_options):
     config.setup_login_by_url(polygon_name)
     contest = ProblemSession(polygon_name, None, pin, **session_options)
