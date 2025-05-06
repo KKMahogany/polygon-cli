@@ -2,7 +2,7 @@ from prettytable import PrettyTable
 
 from .common import *
 
-# TODO: This should be using problem.editSolutionExtraTags from the API instead
+# TODO: Marked as not implemented as we're removing all non-API requests
 def process_tag_solution(solution, tags):
     for i in range(len(tags)):
         data={
@@ -13,8 +13,8 @@ def process_tag_solution(solution, tags):
             'submitted':True,
             'chosenType':tags[i]
         }
-        print(data)
-        global_vars.problem.send_request('POST', global_vars.problem.make_link('solutions',ccid=True,ssid=True), data=data)
+        #global_vars.problem.send_request('POST', global_vars.problem.make_link('solutions',ccid=True,ssid=True), data=data)
+        raise NotImplementedError
 
 
 def add_parser(subparsers):

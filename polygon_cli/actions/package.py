@@ -2,10 +2,7 @@ from .common import *
 
 
 def process_download_last_package(options):
-    if not load_session_with_options(options):
-        fatal('No session known. Use relogin or init first.')
-    global_vars.problem.download_last_package()
-    save_session()
+    raise NotImplementedError
 
 
 def add_parser(subparsers):
