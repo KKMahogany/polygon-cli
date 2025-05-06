@@ -70,18 +70,6 @@ def diff_file_with_content(old_path, new_path, content):
     _diff_files(old_path, new_path, old_path + '.new')
 
 
-def prepare_url_print(url):
-    splited = url.split("?")
-    if len(splited) != 2:
-        return url
-    args = splited[1].split('&')
-    args = filter(lambda x: not (x.startswith('ccid=') or x.startswith('session=')), args)
-    argsstr = '&'.join(args)
-    if argsstr:
-        argsstr = '?' + argsstr
-    return splited[0] + argsstr
-
-
 def get_local_solutions():
     return os.listdir(config.solutions_path)
 

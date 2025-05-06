@@ -3,7 +3,7 @@ from .common import *
 
 def process_update_info(options):
     if not load_session_with_options(options):
-        fatal('No session known. Use relogin or init first.')
+        fatal('No session known. Use init first.')
     global_vars.problem.update_info(inputfile=options.inputfile, outputfile=options.outputfile,
                                     memorylimit=options.memory_limit, timelimit=options.time_limit,
                                     interactive=options.interactive)

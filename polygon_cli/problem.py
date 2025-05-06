@@ -15,7 +15,6 @@ from . import polygon_file
 from . import utils
 from . import colors
 from .exceptions import PolygonNotLoginnedError, ProblemNotFoundError, PolygonApiError
-from .polygon_html_parsers import *
 from . import freemarker_parsers
 
 # Most of the "get file" operations in the Polygon API return
@@ -73,9 +72,7 @@ class ProblemSession:
         self.problem_name = None
         self.session = requests.session()
         self.sessionId = None
-        self.ccid = None
         self.local_files = []
-        self.relogin_done = False
         self.verbose = verbose
         self.pin = pin
         self.scores_enabled = False
@@ -90,7 +87,6 @@ class ProblemSession:
         cookies = data["cookies"]
         for i in cookies.keys():
             self.session.cookies.set(i, cookies[i])
-        self.ccid = data["ccid"]
         assert self.problem_id == data["problemId"]
         self.sessionId = data["sessionId"]
         self.local_files = data["localFiles"]
@@ -112,7 +108,6 @@ class ProblemSession:
         data["problemId"] = self.problem_id
         data["sessionId"] = self.sessionId
         data["cookies"] = self.session.cookies.get_dict()
-        data["ccid"] = self.ccid
         data["localFiles"] = self.local_files
         data["problemName"] = self.problem_name
         data["owner"] = self.owner
@@ -120,64 +115,6 @@ class ProblemSession:
         if self.pin is not None:
             data["pin"] = self.pin
         return data
-
-    # Helper method that makes links for non-API requests.
-    # Really should only be used internally, but is used by tag_solution.
-    # The functionality in that action should be moved in here.
-    def make_link(self, link, ccid=False, ssid=False):
-        """
-
-        :type link: str
-        :type ccid: bool
-        :type ssid: bool
-        :rtype: str
-        """
-        # Append the ccid and ssid HTML parameters, though we may need to re-log in
-        # if we don't have them for some reason.
-        if ccid:
-            if link.find('?') != -1:
-                link += '&'
-            else:
-                link += '?'
-            if self.ccid is None:
-                self._renew_http_data()
-            link += 'ccid=%s' % self.ccid
-        if ssid:
-            if link.find('?') != -1:
-                link += '&'
-            else:
-                link += '?'
-            if self.sessionId is None:
-                self._renew_http_data()
-            link += 'session=%s' % self.sessionId
-        if link.startswith('/'):
-            result = config.polygon_url + link
-        else:
-            result = config.polygon_url + '/' + link
-        return result
-
-    # Sends a non-API request, but first logs in if necessary.
-    # Use make_link to create the URL for this method
-    def send_request(self, method, url, **kw):
-        """
-
-        :type method: str
-        :type url: str
-        :rtype: requests.Response
-        :raises: PolygonNotLoginnedError
-        """
-        print('Sending request to ' + utils.prepare_url_print(url), end=' ')
-        sys.stdout.flush()
-        result = self.session.request(method, url, **kw)
-        print(result.status_code)
-        if result.url and result.url.startswith(config.polygon_url + '/login'):
-            if not self.relogin_done:
-                self._renew_http_data()
-                return self.send_request(method, url, **kw)
-            else:
-                print('Already tried to relogin, but it didn''t helped')
-                raise PolygonNotLoginnedError()
-        return result
 
     def send_api_request(self, api_method, params, is_json=True, problem_data=True):
         if self.verbose:
@@ -224,70 +161,6 @@ class ProblemSession:
             if i.type == 'script':
                 return open(i.get_path(), 'rb').read()
         return None
-
-    # In order to make non-API requests, we need to login first, which requires
-    # the username and password.
-    def login(self, login, password):
-        """
-
-        :type login: str
-        :type password: str
-        """
-        fields = {
-            "submitted": "true",
-            "login": login,
-            "password": password,
-            "attachSessionToIp": "on",
-            "submit": "Login",
-        }
-
-        url = self.make_link("login")
-        result = self.send_request('POST', url, data=fields)
-        parser = ExtractCCIDParser()
-        parser.feed(result.text)
-        assert parser.ccid
-        self.ccid = parser.ccid
-
-    def get_problem_links(self):
-        """
-
-        :rtype: dict
-        """
-        currentpage = 1
-        while True:
-            url = self.make_link('problems?page=%d' % currentpage, ccid=True)
-            problems_page = self.send_request('GET', url).text
-            parser = ProblemsPageParser(self.problem_id)
-            parser.feed(problems_page)
-            if parser.continueLink or parser.startLink:
-                return {'continue': parser.continueLink,
-                        'discard': parser.discardLink,
-                        'start': parser.startLink,
-                        'owner': parser.owner,
-                        'problem_name': parser.problemName
-                        }
-            if currentpage >= parser.numberOfProblemPages:
-                break
-            currentpage += 1
-        return {'continue': None,
-                'discard': None,
-                'start': None,
-                'owner': None,
-                'problem_name': None
-                }
-
-    def _renew_http_data(self):
-        self.relogin_done = True
-        config.ask_for_login_password()
-        self.login(config.login, config.password)
-        links = self.get_problem_links()
-        if links['start'] is None and links['continue'] is None:
-            raise ProblemNotFoundError()
-        url = self.make_link(links['continue'] or links['start'])
-        problem_page = self.send_request('GET', url).text
-        parser = ExtractSessionParser()
-        parser.feed(problem_page)
-        self.sessionId = parser.session
 
     def get_solutions_list(self):
         """
@@ -594,27 +467,6 @@ class ProblemSession:
         for i in problems.keys():
             result[problems[i]["name"]] = problems[i]["id"]
         return result
-
-    def download_last_package(self):
-        url = self.make_link('package', ssid=True, ccid=True)
-        data = self.send_request('GET', url).text
-        parser = PackageParser()
-        parser.feed(data)
-        print(parser.url)
-        if parser.url is None:
-            print('No package created')
-            return
-        link = self.make_link(parser.url, ssid=True, ccid=False)
-        filename = parser.url
-        filename = filename[:filename.find('.zip')]
-        filename = filename[filename.rfind('/') + 1:]
-        filename = filename[:filename.rfind('-')]
-        f = open('%s.zip' % (filename), 'wb')
-        r = self.send_request('GET', link)
-        for c in r.iter_content(1024):
-            if (c):
-                f.write(c)
-        f.close()
 
     def read_tutorial(self, problem_node, directory, language):
         if problem_node.find('tutorials') is None:

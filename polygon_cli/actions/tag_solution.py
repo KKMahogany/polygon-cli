@@ -28,7 +28,7 @@ def add_parser(subparsers):
 
     def read_options(options):
         if not load_session_with_options(options):
-            fatal('No session known. Use relogin or init first.')
+            fatal('No session known. Use init first.')
         process_tag_solution(options.solution, options.tags)
         save_session()
 

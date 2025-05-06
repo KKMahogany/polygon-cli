@@ -3,7 +3,7 @@ from .common import *
 
 def process_import_problem_from_package(options):
     if not load_session_with_options(options):
-        fatal('No session known. Use relogin or init first.')
+        fatal('No session known. Run init first.')
     global_vars.problem.import_problem_from_package(options.directory)
     save_session()
 
