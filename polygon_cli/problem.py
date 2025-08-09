@@ -46,8 +46,8 @@ def _convert_to_local_newlines(x):
     return x
 
 _default_source_types = {
-    '.cpp': 'cpp.g++17',
-    '.c++': 'cpp.g++17',
+    '.cpp': 'cpp.gcc14-64-msys2-g++23',
+    '.c++': 'cpp.gcc14-64-msys2-g++23',
     '.py': 'python.3',
     '.java': 'java8',
     '.pas': 'pas.fpc',
