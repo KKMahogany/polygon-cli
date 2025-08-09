@@ -4,12 +4,14 @@ import random
 import sys
 import time
 
+
 from xml.etree import ElementTree
 import os
 import glob
 import re
 import requests
 
+from .logs import debug
 from . import config
 from . import polygon_file
 from . import utils
@@ -60,7 +62,7 @@ _default_source_types = {
 #  - update: Pull and merge files from polygon
 #  - commit: Push all local changes to polygon
 class ProblemSession:
-    def __init__(self, polygon_name, problem_id, pin, verbose=True):
+    def __init__(self, polygon_name, problem_id, pin):
         """
 
         :type polygon_name: str
@@ -73,7 +75,6 @@ class ProblemSession:
         self.session = requests.session()
         self.sessionId = None
         self.local_files = []
-        self.verbose = verbose
         self.pin = pin
         self.scores_enabled = False
         self.groups_enabled = set()
@@ -117,8 +118,7 @@ class ProblemSession:
         return data
 
     def send_api_request(self, api_method, params, is_json=True, problem_data=True):
-        if self.verbose:
-            print('Invoking ' + api_method)
+        debug('Invoking ' + api_method)
 
         params["apiKey"] = config.api_key
         params["time"] = int(time.time())
@@ -142,18 +142,18 @@ class ProblemSession:
         url = config.polygon_url + '/api/' + api_method
         result = self.session.request('POST', url, files=params)
 
-        if self.verbose or result.status_code != 200:
-            print(f'Invoking of {api_method} gave status code {result.status_code}')
+        debug(f'Invoking of {api_method} gave status code {result.status_code}')
 
-        if not is_json and result.status_code == 200:
-            return result.content
-        result = json.loads(result.content.decode('utf8'))
-        if result["status"] == "FAILED":
-            print(result["comment"])
-            raise PolygonApiError()
-        if "result" in result:
-            return result["result"]
-        return None
+        if not is_json:
+            return result.content if result.status_code == 200 else None
+        else:
+            result = json.loads(result.content.decode('utf8'))
+            if result["status"] == "FAILED":
+                print(colors.error(f"An error occurred: {result['comment']}"))
+                raise PolygonApiError()
+            if "result" in result:
+                return result["result"]
+            return None
 
     # Only used in actions/update_groups.py
     def get_script_content(self):

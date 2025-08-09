@@ -18,7 +18,7 @@ def fatal(error):
 #
 # Only has one option at the moment, verbosity
 def load_session_with_options(options):
-    _load_session(options.verbose)
+    _load_session()
     return True # Used to return false on fail, now just dies
 
 
@@ -32,7 +32,7 @@ def save_session():
     utils.safe_rewrite_file(_session_file_path(), session_data_json)
 
 
-def _load_session(verbose=True):
+def _load_session():
     # TODO: I don't like that this utility has to have the working directory
     # be the root of the problem directory.
     if os.path.exists(_session_file_path()):
@@ -51,8 +51,7 @@ def _load_session(verbose=True):
     global_vars.problem = ProblemSession(
             session_data['polygon_name'],
             session_data["problemId"],
-            pin=None,
-            verbose=verbose)
+            pin=None)
 
     global_vars.problem.use_ready_session(session_data)
 

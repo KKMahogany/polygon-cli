@@ -5,11 +5,6 @@ from .. import colors
 from .. import config
 from .. import global_vars
 
-
-def get_session_options(options):
-    return {'verbose': options.verbose}
-
-
 def process_init(polygon_name, problem_id, pin, **session_options):
     config.setup_login_by_url(polygon_name)
     if not problem_id.isdigit():
@@ -68,7 +63,7 @@ def add_parser(subparsers):
     )
     parser_init.add_argument('problem_id', help='Problem id to work with')
     parser_init.add_argument('--pin', dest='pin', default=None, help='Pin code for problem')
-    parser_init.set_defaults(func=lambda options: process_init(options.polygon_name, options.problem_id, options.pin, **get_session_options(options)))
+    parser_init.set_defaults(func=lambda options: process_init(options.polygon_name, options.problem_id, options.pin))
     parser_init.add_argument('--polygon-name',
                         action='store',
                         dest='polygon_name',
@@ -88,4 +83,4 @@ def add_parser(subparsers):
                         help='Name of polygon server to use for this problem',
                         default='main'
                         )
-    parser_init_contest.set_defaults(func=lambda options: process_init_contest(options.polygon_name, options.contest_id, options.pin, **get_session_options(options)))
+    parser_init_contest.set_defaults(func=lambda options: process_init_contest(options.polygon_name, options.contest_id, options.pin))

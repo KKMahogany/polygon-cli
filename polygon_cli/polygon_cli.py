@@ -17,12 +17,13 @@ from .actions import update_info as update_info_action
 from .actions import tag_solution as tag_solution_action
 from .actions import tag_problem as tag_problem_action
 from .exceptions import PolygonNotLoginnedError
+from . import logs
 
 parser = argparse.ArgumentParser(prog="polygon-cli")
 parser.add_argument('-v', '--verbose',
                     action='store_true',
                     dest='verbose',
-                    default=True,
+                    default=False,
                     help='Verbose output')
 parser.add_argument('-V', '--no-verbose',
                     action='store_false',
@@ -56,6 +57,7 @@ tag_problem_action.add_parser(subparsers)
 def main():
     try:
         options = parser.parse_args(argv[1:])
+        logs.verbose = options.verbose
         options.func(options)
     except PolygonNotLoginnedError:
         print('Can not login to polygon.')
