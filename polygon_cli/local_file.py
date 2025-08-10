@@ -4,6 +4,29 @@ from . import config
 from . import global_vars
 from . import utils
 
+# NOTE: Type is an overloaded concept:
+#
+# The polygon API has a "type" parameter on a lot of methods.
+# It should be one of:
+#   - source   (a file that is ran or compiled)
+#   - resource (a file that will be made available for running/compiling sources)
+#   - aux      (a file that will be made available to the contestant)
+#
+# Some polygon methods return File objects. For files of type "source",
+# there is an additional "sourceType" parameter which indicates what
+# compiler should be used.
+#
+# Now, internally this CLI has its own concept of "type", which divides
+# files based on their purpose:
+#  - script: The freemarker file for generating tests
+#  - statement: A meta-file object that actually represents a collection
+#               of .tex files
+#  - solution: A solution file
+#
+# TODO: The CLI permits other file types (e.g. validator, checker), but
+# they are not properly supported. They can be uploaded, but won't be
+# set as the validator, checker etc.
+
 
 # This class represents a "file" object in the local workspace
 #
