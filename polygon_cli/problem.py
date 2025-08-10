@@ -205,7 +205,7 @@ class ProblemSession:
                 file = polygon_file.PolygonFile()
                 file.type = 'statement'
                 file.name = '%s/%s.tex' % (lang, name)
-                file.content = polygon_file.PolygonFile.to_byte(content, encoding)
+                file.statement_content = polygon_file.PolygonFile.to_byte(content, encoding)
                 file.size = len(content)
                 files.append(file)
         return files

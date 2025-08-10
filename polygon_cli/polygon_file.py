@@ -2,21 +2,27 @@ from . import config
 from . import global_vars
 from . import utils
 
-# This class represents a "file" object on polygon. It generally
-# corresponds 1:1 to "files" you upload, except statements are sort of
-# a special case.
+# Polygon API to list files returns only metadata for each file.
+# This class represents that metadata.
 #
-# On polygon, a statement is divided into semantic sections (name,
-# legend, input format etc.). Under the hood polygon has a separate
-# .tex file for each of these, so it is still 1:1.
+# You actually have to call get_content to call the API and get the data.
+#
+# If you want to work with the file, convert it to an appropriate LocalFile before using it.
 class PolygonFile:
     def __init__(self):
+        # Directly from the File object returned by the API
         self.name = None
-        # See subdirectory_paths for a list of valid types
-        self.type = None
         self.date = None
         self.size = None
-        self.content = None
+
+        # Our internal concept of file type -- not polygon's.
+        # See local_file.py and subdirectory_paths for a list of valid types
+        self.type = None
+
+        # Field to save statement content for get_statements_list. It returns all
+        # the content, so no need to issue API requests for each piece of the statement
+        # individually.
+        self.statement_content = None
 
     @staticmethod
     def to_byte(value, encoding):
@@ -41,11 +47,11 @@ class PolygonFile:
         elif self.type == 'solution':
             file_text = global_vars.problem.send_api_request('problem.viewSolution', {'name': self.name}, False)
         elif self.type == 'statement':
-            if self.content is not None:
+            if self.statement_content is not None:
                 # Pre-populated by get_statements_list for efficiency.
                 # Doing an API request per section (name, legend, input
                 # format, output format etc.) will be annoyingly slow.
-                file_text = self.content
+                file_text = self.statement_content
             else:
                 data = global_vars.problem.send_api_request('problem.statements', {})
                 lang, name = self.name.split('/')
