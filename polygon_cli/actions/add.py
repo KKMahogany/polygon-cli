@@ -10,7 +10,7 @@ def process_add(file_type, solution_type, files):
     if file_type in ['checker', 'validator', 'interactor']:
         if len(files) != 1:
             fatal('can''t set several ' + file_type + 's')
-        file_type = 'source'
+        raise NotImplementedError(f'Add is not supported for {file_type}. Create the file on polygon first, then you can use "commit"')
     if solution_type is not None:
         if file_type != 'solution':
             fatal('solution type can be set only on solutions')
