@@ -1,4 +1,6 @@
-# For methods common to all actions
+# Loads and dumps information that needs to be persisted across invocations. Namely:
+# 1. Session keys for the API
+# 2. The state of local files (what's been modified)
 import json
 import os
 
