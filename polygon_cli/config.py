@@ -24,7 +24,6 @@ subdirectory_paths = {
     # files that can be modified and committed. It's "read-only".
     #'test': 'tests',
     'statement': 'statements',
-    'statementResource': 'statements',
 }
 
 

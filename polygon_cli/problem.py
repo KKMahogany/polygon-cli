@@ -22,16 +22,18 @@ from . import freemarker_parsers
 # Most of the "get file" operations in the Polygon API return
 # the same sort of json object. This method converts it to a polygon file.
 #
-# (only used in this file)
-def _parse_api_file_list(files, files_raw, type):
+# Returns nothing. Appends PolygonFile objects to the first parameter.
+def _parse_api_file_list(files_output_list, files_raw, type):
+    debug("Received", files_raw)
     for j in files_raw:
         file = polygon_file.PolygonFile()
         file.type = type
         file.name = j["name"]
         file.date = j["modificationTimeSeconds"]
         file.size = j["length"]
-        files.append(file)
+        files_output_list.append(file)
 
+_types_map = {'sourceFiles': 'source', 'resourceFiles': 'resource', 'auxFiles': 'attachment'}
 
 # Simple utility to get rid of the windows line endings that
 # polygon uses for tests
@@ -180,9 +182,8 @@ class ProblemSession:
         files = []
 
         files_raw = self.send_api_request('problem.files', {})
-        types_map = {'sourceFiles': 'source', 'resourceFiles': 'resource', 'auxFiles': 'attachment'}
-        for i in types_map:
-            _parse_api_file_list(files, files_raw[i], types_map[i])
+        for i in _types_map:
+            _parse_api_file_list(files, files_raw[i], _types_map[i])
 
         script = polygon_file.PolygonFile()
         script.type = 'script'
@@ -259,8 +260,6 @@ class ProblemSession:
             api_method = 'problem.saveSolution'
             if tag:
                 options['tag'] = tag
-        elif type == 'statementResource':
-            api_method = 'problem.saveStatementResource'
         else:
             api_method = 'problem.saveFile'
             options['type'] = utils.get_api_file_type(type)
